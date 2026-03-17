@@ -12,8 +12,8 @@ def plot_results(
 
     model.eval()
     model.likelihood.eval()
-    MAE_test = np.abs(model(valid_x).mean.detach().cpu().numpy() - valid_y.detach().cpu().numpy())
-    MAE_test = np.mean(MAE_test)
+    MAE_valid = np.abs(model(valid_x).mean.detach().cpu().numpy() - valid_y.detach().cpu().numpy())
+    MAE_valid = np.mean(MAE_valid)
 
     MAE_train = np.abs(model(train_x).mean.detach().cpu().numpy() - train_y.detach().cpu().numpy())
     MAE_train = np.mean(MAE_train)
@@ -21,14 +21,34 @@ def plot_results(
     train_pred = model(train_x).mean.detach().cpu().numpy()
     valid_pred = model(valid_x).mean.detach().cpu().numpy()
 
+    train_std = model(train_x).stddev.detach().cpu().numpy()
+    valid_std = model(train_x).stddev.detach().cpu().numpy()
+
     min = np.min(np.concatenate((train_pred, valid_pred)))
     max = np.max(np.concatenate((train_pred, valid_pred)))
 
     fig = go.Figure()
     fig.add_trace(go.Scatter(x = np.linspace(min,max, 10), y = np.linspace(min,max, 10), mode = 'lines', line=dict(color='grey'), showlegend=False))
-    fig.add_trace(go.Scatter(x = train_pred, y = train_y.detach().cpu().numpy(), mode = 'markers', name= f'MAE<sub>train</sub> = {MAE_train*1000:.3f} meV', marker = dict(size = 15, color = '#636EFA')))
-    fig.add_trace(go.Scatter(x = valid_pred, y = valid_y.detach().cpu().numpy(), mode = 'markers',  name= f'MAE<sub>valid</sub>  = {MAE_test*1000:.3f} meV', marker = dict(size = 15, color = '#FFA15A')))
 
+    fig.add_trace(go.Scatter(x = train_pred, y = train_y.detach().cpu().numpy(),
+                             mode = 'markers',
+                             name= f'MAE<sub>train</sub> = {MAE_train*1000:.3f} meV',
+                             marker = dict(size = 15, color = '#636EFA'),
+                             error_x = dict(type='data',
+                                            array=train_std,
+                                            visible=True)
+                             )
+                  )
+
+    fig.add_trace(go.Scatter(x = valid_pred, y = valid_y.detach().cpu().numpy(),
+                             mode = 'markers',
+                             name= f'MAE<sub>valid</sub> = {MAE_valid*1000:.3f} meV',
+                             marker = dict(size = 15, color = '#FFA15A'),
+                             error_x = dict(type='data',
+                                            array=valid_std,
+                                            visible=True)
+                             )
+                  )
     fig.update_xaxes(title = 'E<sub>model</sub>, eV',
                      ticklabelstep=2,
                      title_font=dict(size=25),
@@ -55,7 +75,7 @@ def plot_results(
                       family="Arial",
                       size=23,)
                      )
-    fig.update_legends(x = 0.77, y = 0.95)
+    fig.update_legends(x = 0.77, y = 0.5)
 
     if save_plot:
         fig.write_image('gpr_accuracy.pdf')

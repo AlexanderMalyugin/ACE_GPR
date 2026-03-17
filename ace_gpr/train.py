@@ -130,6 +130,9 @@ def train(
                 f"lr: {lr_value:.3e}"
             )
 
+            if lr_value < 1e-5:
+                break
+
     print(f"Best validation MAE: {best_mae_valid:.6f} at epoch {best_epoch}")
     print(f"Best checkpoint saved to: {checkpoint_path}")
 
