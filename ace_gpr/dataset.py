@@ -67,6 +67,7 @@ class ACE_Dataset(Dataset):
 
         global y_dataset
         dir_list = os.listdir(self.directory)
+        dir_list.sort()
         dir_list = [x for x in dir_list if not x.startswith(".")]
 
         outcars = []
@@ -96,6 +97,7 @@ class ACE_Dataset(Dataset):
         if self.target_y == "E_ADS":
 
             ref_dir_list = os.listdir(self.ref_directory)
+            ref_dir_list.sort()
             ref_dir_list = [x for x in ref_dir_list if not x.startswith(".")]
 
             ref_outcars = []
