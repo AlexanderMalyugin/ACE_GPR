@@ -13,30 +13,7 @@ class Cluster_Expansion:
         max_order: int = 2,
         atom_indices: list[int] | None = None,
     ):
-        """
-        Build cluster-expansion-style descriptors for an ASE Atoms object.
 
-        Parameters
-        ----------
-        atoms : ase.Atoms
-            Atomic structure.
-        shells : dict | None
-            Pair shells:
-            {
-                "pairs_1": (rmin_1, rmax_1),
-                "pairs_2": (rmin_2, rmax_2),
-                ...
-            }
-        max_order : int
-            Maximum cluster order:
-            1 -> singles
-            2 -> singles + pairs
-            3 -> singles + pairs + triplets
-        atom_indices : list[int] | None
-            If None, all atoms are counted.
-            If provided, a cluster is counted if at least one atom from the cluster
-            belongs to atom_indices.
-        """
         self.atoms = atoms
         self.shells = shells or {}
         self.max_order = max_order
@@ -86,58 +63,29 @@ class Cluster_Expansion:
                     )
 
     def chemical_labels(self, order: int):
-        """
-        Return unordered chemical labels for a given cluster order.
 
-        Examples for elements ['Fe', 'O']:
-        order=1 -> ['Fe', 'O']
-        order=2 -> ['FeFe', 'FeO', 'OO']
-        order=3 -> ['FeFeFe', 'FeFeO', 'FeOO', 'OOO']
-        """
         return [
             ''.join(comb)
             for comb in combinations_with_replacement(self.elements, order)
         ]
 
     def cluster_chem_key(self, cluster_indices, symbols):
-        """
-        Return an unordered chemical key for a cluster.
 
-        Examples:
-        [Fe, O]      -> 'FeO'
-        [O, Fe]      -> 'FeO'
-        [Fe, O, Fe]  -> 'FeFeO'
-        [O, Fe, Fe]  -> 'FeFeO'
-        """
         chem = sorted(symbols[i] for i in cluster_indices)
         return ''.join(chem)
 
     def _cluster_matches_selection(self, cluster_indices):
-        """
-        Variant B:
-        Count a cluster if at least one atom from the cluster is in atom_indices.
-        If atom_indices is None, count all clusters.
-        """
+
         if self.atom_index_set is None:
             return True
         return any(i in self.atom_index_set for i in cluster_indices)
 
     def _build_single_clusters(self):
-        """Build single-atom clusters for all atoms."""
         n_atoms = len(self.atoms)
         return {"singles": [[i] for i in range(n_atoms)]}
 
     def _build_pair_clusters(self):
-        """
-        Build pair clusters using ASE neighbor_list only once up to the maximum shell cutoff.
 
-        Returns
-        -------
-        pair_clusters : dict
-            Dictionary {shell_name: [[i, j], ...]}
-        pair_sets : dict
-            Dictionary {shell_name: {(i, j), ...}} with i < j
-        """
         max_cutoff = max(rmax for _, rmax in self.shells.values())
 
         i_arr, j_arr, d_arr = neighbor_list("ijd", self.atoms, max_cutoff)
@@ -174,18 +122,7 @@ class Cluster_Expansion:
 
     @staticmethod
     def pairlist_to_dict(pair_iterable):
-        """
-        Convert a list/set of pairs into a neighbor dictionary.
 
-        Example:
-        [(0,1), (0,2), (2,3)] ->
-        {
-            0: {1,2},
-            1: {0},
-            2: {0,3},
-            3: {2}
-        }
-        """
         neighbors = defaultdict(set)
         for i, j in pair_iterable:
             neighbors[i].add(j)
@@ -193,17 +130,7 @@ class Cluster_Expansion:
         return neighbors
 
     def _build_triplet_clusters(self, pair_sets):
-        """
-        Build triplets of type:
-        trip_hips_{hips_shell}_base_{base_shell}
 
-        Geometry definition:
-        - (i, j) and (i, k) belong to hips_shell
-        - (j, k) belongs to base_shell
-
-        The stored triplet is canonicalized as sorted(i, j, k),
-        because chemistry is counted in a fully unordered way.
-        """
         triplet_clusters = {}
         shell_names = list(self.shells.keys())
 
@@ -230,12 +157,7 @@ class Cluster_Expansion:
         return triplet_clusters
 
     def build_clusters(self):
-        """
-        Build all geometric clusters:
-        - singles
-        - pairs in each shell
-        - triplets defined by shell combinations
-        """
+
         clusters = {}
 
         if self.max_order >= 1:
@@ -253,18 +175,7 @@ class Cluster_Expansion:
         return clusters
 
     def count_descriptors(self):
-        """
-        Count chemical cluster descriptors.
 
-        Chemistry is always treated as unordered:
-        - pairs:    FeO == OFe
-        - triplets: FeOFe == FeFeO == OFeFe
-
-        Selection rule (variant B):
-        - if atom_indices is None: count all clusters
-        - otherwise: count a cluster if at least one atom in the cluster
-          belongs to atom_indices
-        """
         descriptor = []
         names = []
 
@@ -308,8 +219,6 @@ class Cluster_Expansion:
         return np.asarray(descriptor, dtype=float), names
 
     def generate_all_descriptors(self):
-        """Build clusters and count descriptor values."""
         self.clusters = self.build_clusters()
         self.descriptor, self.names = self.count_descriptors()
-        self.descript = self.descriptor
         return 0

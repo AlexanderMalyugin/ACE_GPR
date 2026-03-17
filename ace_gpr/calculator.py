@@ -1,8 +1,8 @@
 import ase
 import torch
 
-from modules.ase_extractor import *
-from modules.dataset import calc_mindist, atoms_near_carbon
+from ace_gpr.ase_extractor import *
+from ace_gpr.dataset import calc_mindist, atoms_near_carbon
 
 
 class calculator:

@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ace_gpr"
+version = "0.1.0"
+description = "ACE_GPR"
+authors = [{ name="Aleksandr Maliugin"}]
+requires-python = ">=3.9"
+dependencies = [
+    "numpy",
+    "torch",
+    "ase",
+    "plotly>=5.20",
+    "tqdm",
+    "h5py",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["ace_gpr*"]

@@ -8,7 +8,7 @@ from tqdm import tqdm
 import ase
 from ase.io import read
 
-from modules.ase_extractor import *
+from ace_gpr.ase_extractor import *
 
 class ACE_Dataset(Dataset):
 
